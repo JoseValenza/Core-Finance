@@ -18,6 +18,7 @@ import { Route as ClienteNegociacaoRouteImport } from './routes/cliente.negociac
 import { Route as ClienteHistoricoRouteImport } from './routes/cliente.historico'
 import { Route as ClienteDividasRouteImport } from './routes/cliente.dividas'
 import { Route as ClienteDashboardRouteImport } from './routes/cliente.dashboard'
+import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 
 const EsqueciSenhaRoute = EsqueciSenhaRouteImport.update({
   id: '/esqueci-senha',
@@ -64,12 +65,18 @@ const ClienteDashboardRoute = ClienteDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => ClienteRoute,
 } as any)
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/cliente': typeof ClienteRouteWithChildren
   '/esqueci-senha': typeof EsqueciSenhaRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
   '/cliente/dashboard': typeof ClienteDashboardRoute
   '/cliente/dividas': typeof ClienteDividasRoute
   '/cliente/historico': typeof ClienteHistoricoRoute
@@ -78,9 +85,10 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/cliente': typeof ClienteRouteWithChildren
   '/esqueci-senha': typeof EsqueciSenhaRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
   '/cliente/dashboard': typeof ClienteDashboardRoute
   '/cliente/dividas': typeof ClienteDividasRoute
   '/cliente/historico': typeof ClienteHistoricoRoute
@@ -90,9 +98,10 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/cliente': typeof ClienteRouteWithChildren
   '/esqueci-senha': typeof EsqueciSenhaRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
   '/cliente/dashboard': typeof ClienteDashboardRoute
   '/cliente/dividas': typeof ClienteDividasRoute
   '/cliente/historico': typeof ClienteHistoricoRoute
@@ -106,6 +115,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cliente'
     | '/esqueci-senha'
+    | '/admin/dashboard'
     | '/cliente/dashboard'
     | '/cliente/dividas'
     | '/cliente/historico'
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cliente'
     | '/esqueci-senha'
+    | '/admin/dashboard'
     | '/cliente/dashboard'
     | '/cliente/dividas'
     | '/cliente/historico'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cliente'
     | '/esqueci-senha'
+    | '/admin/dashboard'
     | '/cliente/dashboard'
     | '/cliente/dividas'
     | '/cliente/historico'
@@ -137,7 +149,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
   ClienteRoute: typeof ClienteRouteWithChildren
   EsqueciSenhaRoute: typeof EsqueciSenhaRoute
 }
@@ -207,8 +219,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClienteDashboardRouteImport
       parentRoute: typeof ClienteRoute
     }
+    '/admin/dashboard': {
+      id: '/admin/dashboard'
+      path: '/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
+
+interface AdminRouteChildren {
+  AdminDashboardRoute: typeof AdminDashboardRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminDashboardRoute: AdminDashboardRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface ClienteRouteChildren {
   ClienteDashboardRoute: typeof ClienteDashboardRoute
@@ -231,7 +260,7 @@ const ClienteRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
   ClienteRoute: ClienteRouteWithChildren,
   EsqueciSenhaRoute: EsqueciSenhaRoute,
 }
