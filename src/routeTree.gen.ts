@@ -9,38 +9,246 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as EsqueciSenhaRouteImport } from './routes/esqueci-senha'
+import { Route as ClienteRouteImport } from './routes/cliente'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ClientePagamentosRouteImport } from './routes/cliente.pagamentos'
+import { Route as ClienteNegociacaoRouteImport } from './routes/cliente.negociacao'
+import { Route as ClienteHistoricoRouteImport } from './routes/cliente.historico'
+import { Route as ClienteDividasRouteImport } from './routes/cliente.dividas'
+import { Route as ClienteDashboardRouteImport } from './routes/cliente.dashboard'
+import { Route as AdminPropostasRouteImport } from './routes/admin.propostas'
+import { Route as AdminPagamentosRouteImport } from './routes/admin.pagamentos'
+import { Route as AdminEmpresasRouteImport } from './routes/admin.empresas'
+import { Route as AdminDividasRouteImport } from './routes/admin.dividas'
+import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
+import { Route as AdminClientesRouteImport } from './routes/admin.clientes'
+import { Route as AdminAcordosRouteImport } from './routes/admin.acordos'
 
+const EsqueciSenhaRoute = EsqueciSenhaRouteImport.update({
+  id: '/esqueci-senha',
+  path: '/esqueci-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClienteRoute = ClienteRouteImport.update({
+  id: '/cliente',
+  path: '/cliente',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClientePagamentosRoute = ClientePagamentosRouteImport.update({
+  id: '/pagamentos',
+  path: '/pagamentos',
+  getParentRoute: () => ClienteRoute,
+} as any)
+const ClienteNegociacaoRoute = ClienteNegociacaoRouteImport.update({
+  id: '/negociacao',
+  path: '/negociacao',
+  getParentRoute: () => ClienteRoute,
+} as any)
+const ClienteHistoricoRoute = ClienteHistoricoRouteImport.update({
+  id: '/historico',
+  path: '/historico',
+  getParentRoute: () => ClienteRoute,
+} as any)
+const ClienteDividasRoute = ClienteDividasRouteImport.update({
+  id: '/dividas',
+  path: '/dividas',
+  getParentRoute: () => ClienteRoute,
+} as any)
+const ClienteDashboardRoute = ClienteDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => ClienteRoute,
+} as any)
+const AdminPropostasRoute = AdminPropostasRouteImport.update({
+  id: '/propostas',
+  path: '/propostas',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPagamentosRoute = AdminPagamentosRouteImport.update({
+  id: '/pagamentos',
+  path: '/pagamentos',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminEmpresasRoute = AdminEmpresasRouteImport.update({
+  id: '/empresas',
+  path: '/empresas',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminDividasRoute = AdminDividasRouteImport.update({
+  id: '/dividas',
+  path: '/dividas',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminClientesRoute = AdminClientesRouteImport.update({
+  id: '/clientes',
+  path: '/clientes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAcordosRoute = AdminAcordosRouteImport.update({
+  id: '/acordos',
+  path: '/acordos',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/cliente': typeof ClienteRouteWithChildren
+  '/esqueci-senha': typeof EsqueciSenhaRoute
+  '/admin/acordos': typeof AdminAcordosRoute
+  '/admin/clientes': typeof AdminClientesRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/dividas': typeof AdminDividasRoute
+  '/admin/empresas': typeof AdminEmpresasRoute
+  '/admin/pagamentos': typeof AdminPagamentosRoute
+  '/admin/propostas': typeof AdminPropostasRoute
+  '/cliente/dashboard': typeof ClienteDashboardRoute
+  '/cliente/dividas': typeof ClienteDividasRoute
+  '/cliente/historico': typeof ClienteHistoricoRoute
+  '/cliente/negociacao': typeof ClienteNegociacaoRoute
+  '/cliente/pagamentos': typeof ClientePagamentosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/cliente': typeof ClienteRouteWithChildren
+  '/esqueci-senha': typeof EsqueciSenhaRoute
+  '/admin/acordos': typeof AdminAcordosRoute
+  '/admin/clientes': typeof AdminClientesRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/dividas': typeof AdminDividasRoute
+  '/admin/empresas': typeof AdminEmpresasRoute
+  '/admin/pagamentos': typeof AdminPagamentosRoute
+  '/admin/propostas': typeof AdminPropostasRoute
+  '/cliente/dashboard': typeof ClienteDashboardRoute
+  '/cliente/dividas': typeof ClienteDividasRoute
+  '/cliente/historico': typeof ClienteHistoricoRoute
+  '/cliente/negociacao': typeof ClienteNegociacaoRoute
+  '/cliente/pagamentos': typeof ClientePagamentosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/cliente': typeof ClienteRouteWithChildren
+  '/esqueci-senha': typeof EsqueciSenhaRoute
+  '/admin/acordos': typeof AdminAcordosRoute
+  '/admin/clientes': typeof AdminClientesRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/dividas': typeof AdminDividasRoute
+  '/admin/empresas': typeof AdminEmpresasRoute
+  '/admin/pagamentos': typeof AdminPagamentosRoute
+  '/admin/propostas': typeof AdminPropostasRoute
+  '/cliente/dashboard': typeof ClienteDashboardRoute
+  '/cliente/dividas': typeof ClienteDividasRoute
+  '/cliente/historico': typeof ClienteHistoricoRoute
+  '/cliente/negociacao': typeof ClienteNegociacaoRoute
+  '/cliente/pagamentos': typeof ClientePagamentosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/cliente'
+    | '/esqueci-senha'
+    | '/admin/acordos'
+    | '/admin/clientes'
+    | '/admin/dashboard'
+    | '/admin/dividas'
+    | '/admin/empresas'
+    | '/admin/pagamentos'
+    | '/admin/propostas'
+    | '/cliente/dashboard'
+    | '/cliente/dividas'
+    | '/cliente/historico'
+    | '/cliente/negociacao'
+    | '/cliente/pagamentos'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/admin'
+    | '/cliente'
+    | '/esqueci-senha'
+    | '/admin/acordos'
+    | '/admin/clientes'
+    | '/admin/dashboard'
+    | '/admin/dividas'
+    | '/admin/empresas'
+    | '/admin/pagamentos'
+    | '/admin/propostas'
+    | '/cliente/dashboard'
+    | '/cliente/dividas'
+    | '/cliente/historico'
+    | '/cliente/negociacao'
+    | '/cliente/pagamentos'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/cliente'
+    | '/esqueci-senha'
+    | '/admin/acordos'
+    | '/admin/clientes'
+    | '/admin/dashboard'
+    | '/admin/dividas'
+    | '/admin/empresas'
+    | '/admin/pagamentos'
+    | '/admin/propostas'
+    | '/cliente/dashboard'
+    | '/cliente/dividas'
+    | '/cliente/historico'
+    | '/cliente/negociacao'
+    | '/cliente/pagamentos'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
+  ClienteRoute: typeof ClienteRouteWithChildren
+  EsqueciSenhaRoute: typeof EsqueciSenhaRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/esqueci-senha': {
+      id: '/esqueci-senha'
+      path: '/esqueci-senha'
+      fullPath: '/esqueci-senha'
+      preLoaderRoute: typeof EsqueciSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cliente': {
+      id: '/cliente'
+      path: '/cliente'
+      fullPath: '/cliente'
+      preLoaderRoute: typeof ClienteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +256,139 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cliente/pagamentos': {
+      id: '/cliente/pagamentos'
+      path: '/pagamentos'
+      fullPath: '/cliente/pagamentos'
+      preLoaderRoute: typeof ClientePagamentosRouteImport
+      parentRoute: typeof ClienteRoute
+    }
+    '/cliente/negociacao': {
+      id: '/cliente/negociacao'
+      path: '/negociacao'
+      fullPath: '/cliente/negociacao'
+      preLoaderRoute: typeof ClienteNegociacaoRouteImport
+      parentRoute: typeof ClienteRoute
+    }
+    '/cliente/historico': {
+      id: '/cliente/historico'
+      path: '/historico'
+      fullPath: '/cliente/historico'
+      preLoaderRoute: typeof ClienteHistoricoRouteImport
+      parentRoute: typeof ClienteRoute
+    }
+    '/cliente/dividas': {
+      id: '/cliente/dividas'
+      path: '/dividas'
+      fullPath: '/cliente/dividas'
+      preLoaderRoute: typeof ClienteDividasRouteImport
+      parentRoute: typeof ClienteRoute
+    }
+    '/cliente/dashboard': {
+      id: '/cliente/dashboard'
+      path: '/dashboard'
+      fullPath: '/cliente/dashboard'
+      preLoaderRoute: typeof ClienteDashboardRouteImport
+      parentRoute: typeof ClienteRoute
+    }
+    '/admin/propostas': {
+      id: '/admin/propostas'
+      path: '/propostas'
+      fullPath: '/admin/propostas'
+      preLoaderRoute: typeof AdminPropostasRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/pagamentos': {
+      id: '/admin/pagamentos'
+      path: '/pagamentos'
+      fullPath: '/admin/pagamentos'
+      preLoaderRoute: typeof AdminPagamentosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/empresas': {
+      id: '/admin/empresas'
+      path: '/empresas'
+      fullPath: '/admin/empresas'
+      preLoaderRoute: typeof AdminEmpresasRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/dividas': {
+      id: '/admin/dividas'
+      path: '/dividas'
+      fullPath: '/admin/dividas'
+      preLoaderRoute: typeof AdminDividasRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/dashboard': {
+      id: '/admin/dashboard'
+      path: '/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/clientes': {
+      id: '/admin/clientes'
+      path: '/clientes'
+      fullPath: '/admin/clientes'
+      preLoaderRoute: typeof AdminClientesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/acordos': {
+      id: '/admin/acordos'
+      path: '/acordos'
+      fullPath: '/admin/acordos'
+      preLoaderRoute: typeof AdminAcordosRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminAcordosRoute: typeof AdminAcordosRoute
+  AdminClientesRoute: typeof AdminClientesRoute
+  AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminDividasRoute: typeof AdminDividasRoute
+  AdminEmpresasRoute: typeof AdminEmpresasRoute
+  AdminPagamentosRoute: typeof AdminPagamentosRoute
+  AdminPropostasRoute: typeof AdminPropostasRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAcordosRoute: AdminAcordosRoute,
+  AdminClientesRoute: AdminClientesRoute,
+  AdminDashboardRoute: AdminDashboardRoute,
+  AdminDividasRoute: AdminDividasRoute,
+  AdminEmpresasRoute: AdminEmpresasRoute,
+  AdminPagamentosRoute: AdminPagamentosRoute,
+  AdminPropostasRoute: AdminPropostasRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
+interface ClienteRouteChildren {
+  ClienteDashboardRoute: typeof ClienteDashboardRoute
+  ClienteDividasRoute: typeof ClienteDividasRoute
+  ClienteHistoricoRoute: typeof ClienteHistoricoRoute
+  ClienteNegociacaoRoute: typeof ClienteNegociacaoRoute
+  ClientePagamentosRoute: typeof ClientePagamentosRoute
+}
+
+const ClienteRouteChildren: ClienteRouteChildren = {
+  ClienteDashboardRoute: ClienteDashboardRoute,
+  ClienteDividasRoute: ClienteDividasRoute,
+  ClienteHistoricoRoute: ClienteHistoricoRoute,
+  ClienteNegociacaoRoute: ClienteNegociacaoRoute,
+  ClientePagamentosRoute: ClientePagamentosRoute,
+}
+
+const ClienteRouteWithChildren =
+  ClienteRoute._addFileChildren(ClienteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
+  ClienteRoute: ClienteRouteWithChildren,
+  EsqueciSenhaRoute: EsqueciSenhaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
