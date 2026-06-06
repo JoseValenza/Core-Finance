@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, Mail } from "lucide-react";
+import { ArrowLeft, Mail, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/esqueci-senha")({ component: ForgotPage });
@@ -11,6 +12,21 @@ export const Route = createFileRoute("/esqueci-senha")({ component: ForgotPage }
 function ForgotPage() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return toast.error("E-mail inválido.");
+    setBusy(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    setSent(true);
+    toast.success("Instruções enviadas para o e-mail informado.");
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-md">
@@ -23,23 +39,14 @@ function ForgotPage() {
             Informe seu e-mail cadastrado para receber as instruções de redefinição.
           </p>
           {!sent ? (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                  toast.error("E-mail inválido.");
-                  return;
-                }
-                setSent(true);
-                toast.success("Instruções enviadas para o e-mail informado.");
-              }}
-              className="mt-6 space-y-4"
-            >
+            <form onSubmit={onSubmit} className="mt-6 space-y-4">
               <div className="space-y-2">
                 <Label>E-mail</Label>
                 <Input type="email" className="h-11" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" />
               </div>
-              <Button className="w-full h-11">Enviar instruções</Button>
+              <Button disabled={busy} className="w-full h-11">
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Enviar instruções"}
+              </Button>
             </form>
           ) : (
             <div className="mt-6 rounded-lg border border-success/30 bg-success/10 p-4 flex gap-3">
