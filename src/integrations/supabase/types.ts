@@ -14,16 +14,297 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      acordos: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          data_acordo: string
+          divida_id: string
+          id: string
+          proposta_id: string
+          status: Database["public"]["Enums"]["acordo_status"]
+          updated_at: string
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          data_acordo?: string
+          divida_id: string
+          id?: string
+          proposta_id: string
+          status?: Database["public"]["Enums"]["acordo_status"]
+          updated_at?: string
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          data_acordo?: string
+          divida_id?: string
+          id?: string
+          proposta_id?: string
+          status?: Database["public"]["Enums"]["acordo_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "acordos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acordos_divida_id_fkey"
+            columns: ["divida_id"]
+            isOneToOne: false
+            referencedRelation: "dividas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acordos_proposta_id_fkey"
+            columns: ["proposta_id"]
+            isOneToOne: false
+            referencedRelation: "propostas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dividas: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          data_vencimento: string
+          empresa_id: string
+          id: string
+          juros: number
+          numero: string
+          status: Database["public"]["Enums"]["divida_status"]
+          updated_at: string
+          valor_original: number
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          data_vencimento: string
+          empresa_id: string
+          id?: string
+          juros?: number
+          numero: string
+          status?: Database["public"]["Enums"]["divida_status"]
+          updated_at?: string
+          valor_original?: number
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          data_vencimento?: string
+          empresa_id?: string
+          id?: string
+          juros?: number
+          numero?: string
+          status?: Database["public"]["Enums"]["divida_status"]
+          updated_at?: string
+          valor_original?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dividas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dividas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      empresas: {
+        Row: {
+          cnpj: string
+          created_at: string
+          email: string | null
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          cnpj: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          cnpj?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pagamentos: {
+        Row: {
+          acordo_id: string
+          codigo_pagamento: string
+          created_at: string
+          data_pagamento: string
+          id: string
+          status: Database["public"]["Enums"]["pagamento_status"]
+          tipo_pagamento: Database["public"]["Enums"]["tipo_pagamento"]
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          acordo_id: string
+          codigo_pagamento: string
+          created_at?: string
+          data_pagamento?: string
+          id?: string
+          status?: Database["public"]["Enums"]["pagamento_status"]
+          tipo_pagamento: Database["public"]["Enums"]["tipo_pagamento"]
+          updated_at?: string
+          valor?: number
+        }
+        Update: {
+          acordo_id?: string
+          codigo_pagamento?: string
+          created_at?: string
+          data_pagamento?: string
+          id?: string
+          status?: Database["public"]["Enums"]["pagamento_status"]
+          tipo_pagamento?: Database["public"]["Enums"]["tipo_pagamento"]
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagamentos_acordo_id_fkey"
+            columns: ["acordo_id"]
+            isOneToOne: false
+            referencedRelation: "acordos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          cpf: string | null
+          created_at: string
+          email: string | null
+          id: string
+          nome: string
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          id: string
+          nome?: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      propostas: {
+        Row: {
+          created_at: string
+          divida_id: string
+          id: string
+          percentual_desconto: number
+          quantidade_parcelas: number
+          validade: string
+          valor_com_desconto: number
+          valor_parcela: number
+        }
+        Insert: {
+          created_at?: string
+          divida_id: string
+          id?: string
+          percentual_desconto?: number
+          quantidade_parcelas?: number
+          validade: string
+          valor_com_desconto?: number
+          valor_parcela?: number
+        }
+        Update: {
+          created_at?: string
+          divida_id?: string
+          id?: string
+          percentual_desconto?: number
+          quantidade_parcelas?: number
+          validade?: string
+          valor_com_desconto?: number
+          valor_parcela?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "propostas_divida_id_fkey"
+            columns: ["divida_id"]
+            isOneToOne: false
+            referencedRelation: "dividas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      acordo_status: "Pendente" | "Ativo" | "Pago" | "Cancelado"
+      app_role: "admin" | "cliente"
+      divida_status: "Em Aberto" | "Em Negociação" | "Quitada"
+      pagamento_status: "Pendente" | "Pago" | "Cancelado"
+      tipo_pagamento: "Pix" | "Boleto"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +431,12 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      acordo_status: ["Pendente", "Ativo", "Pago", "Cancelado"],
+      app_role: ["admin", "cliente"],
+      divida_status: ["Em Aberto", "Em Negociação", "Quitada"],
+      pagamento_status: ["Pendente", "Pago", "Cancelado"],
+      tipo_pagamento: ["Pix", "Boleto"],
+    },
   },
 } as const
