@@ -208,7 +208,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       await refresh();
     },
     updateEmpresa: async (id, patch) => {
-      await supabase.from("empresas").update(patch).eq("id", id);
+      const { id_empresa: _ignore, ...rest } = patch;
+      void _ignore;
+      await supabase.from("empresas").update(rest as never).eq("id", id);
       await refresh();
     },
     removeEmpresa: async (id) => {
@@ -238,7 +240,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (patch.juros !== undefined) payload.juros = patch.juros;
       if (patch.data_vencimento !== undefined) payload.data_vencimento = patch.data_vencimento;
       if (patch.status !== undefined) payload.status = patch.status;
-      await supabase.from("dividas").update(payload).eq("id", id);
+      await supabase.from("dividas").update(payload as never).eq("id", id);
       await refresh();
     },
     removeDivida: async (id) => {
@@ -266,7 +268,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (patch.quantidade_parcelas !== undefined) payload.quantidade_parcelas = patch.quantidade_parcelas;
       if (patch.valor_parcela !== undefined) payload.valor_parcela = patch.valor_parcela;
       if (patch.validade !== undefined) payload.validade = patch.validade;
-      await supabase.from("propostas").update(payload).eq("id", id);
+      await supabase.from("propostas").update(payload as never).eq("id", id);
       await refresh();
     },
     removeProposta: async (id) => {
