@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { uid } from "@/lib/format";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./AuthContext";
 
 export type DividaStatus = "Em Aberto" | "Em Negociação" | "Quitada";
 export type AcordoStatus = "Pendente" | "Ativo" | "Pago" | "Cancelado";
@@ -65,185 +66,262 @@ interface State {
   pagamentos: Pagamento[];
 }
 
-const KEY = "cf_data_v1";
+// mappers — Supabase row -> domain shape used across the UI
+type Row = Record<string, unknown>;
+const num = (v: unknown) => Number(v ?? 0);
+const str = (v: unknown) => (v == null ? "" : String(v));
 
-const seed = (): State => {
-  const e1 = { id_empresa: uid("emp"), nome: "Banco Sentinela S.A.", cnpj: "12.345.678/0001-90", email: "contato@sentinela.com.br" };
-  const e2 = { id_empresa: uid("emp"), nome: "Crédito Vértice", cnpj: "98.765.432/0001-12", email: "ri@vertice.com.br" };
-  const e3 = { id_empresa: uid("emp"), nome: "Fomento Atlas", cnpj: "55.444.333/0001-22", email: "atendimento@atlas.com.br" };
-
-  const c1 = { id_cliente: uid("cli"), nome: "Marina Albuquerque", cpf: "123.456.789-00", telefone: "(11) 98123-4521", email: "marina.albuquerque@corefin.app" };
-  const c2 = { id_cliente: uid("cli"), nome: "Rafael Monteiro", cpf: "987.654.321-00", telefone: "(21) 99654-8810", email: "rafael.monteiro@corefin.app" };
-  const c3 = { id_cliente: uid("cli"), nome: "Juliana Tavares", cpf: "456.789.123-00", telefone: "(31) 99812-3344", email: "juliana.tavares@corefin.app" };
-  const c4 = { id_cliente: uid("cli"), nome: "André Lacerda", cpf: "321.654.987-00", telefone: "(41) 99311-2200", email: "andre.lacerda@corefin.app" };
-
-  const today = new Date();
-  const dt = (offsetDays: number) => {
-    const d = new Date(today);
-    d.setDate(d.getDate() + offsetDays);
-    return d.toISOString();
-  };
-
-  const mkDiv = (id_cliente: string, id_empresa: string, valor: number, juros: number, vencOffset: number, status: DividaStatus, n: string): Divida => ({
-    id_divida: uid("div"), numero: n, id_cliente, id_empresa, valor_original: valor, juros, data_vencimento: dt(vencOffset), status,
-  });
-
-  const dividas: Divida[] = [
-    mkDiv(c1.id_cliente, e1.id_empresa, 4820.5, 612.3, -45, "Em Aberto", "DIV-2041"),
-    mkDiv(c1.id_cliente, e2.id_empresa, 1250, 110.4, -10, "Em Aberto", "DIV-2042"),
-    mkDiv(c1.id_cliente, e3.id_empresa, 8900, 1320, -120, "Em Negociação", "DIV-2043"),
-    mkDiv(c2.id_cliente, e1.id_empresa, 3200, 280, -30, "Em Aberto", "DIV-2044"),
-    mkDiv(c2.id_cliente, e2.id_empresa, 540, 32, 5, "Quitada", "DIV-2045"),
-    mkDiv(c3.id_cliente, e3.id_empresa, 15400, 2120, -60, "Em Negociação", "DIV-2046"),
-    mkDiv(c4.id_cliente, e1.id_empresa, 980, 88, -15, "Em Aberto", "DIV-2047"),
-    mkDiv(c4.id_cliente, e2.id_empresa, 6700, 940, -90, "Em Aberto", "DIV-2048"),
-  ];
-
-  return {
-    clientes: [c1, c2, c3, c4],
-    empresas: [e1, e2, e3],
-    dividas,
-    propostas: [],
-    acordos: [],
-    pagamentos: [],
-  };
-};
+const mapCliente = (p: Row): Cliente => ({
+  id_cliente: str(p.id),
+  nome: str(p.nome),
+  cpf: str(p.cpf),
+  telefone: str(p.telefone),
+  email: str(p.email),
+});
+const mapEmpresa = (e: Row): Empresa => ({
+  id_empresa: str(e.id),
+  nome: str(e.nome),
+  cnpj: str(e.cnpj),
+  email: str(e.email),
+});
+const mapDivida = (d: Row): Divida => ({
+  id_divida: str(d.id),
+  numero: str(d.numero),
+  id_cliente: str(d.cliente_id),
+  id_empresa: str(d.empresa_id),
+  valor_original: num(d.valor_original),
+  juros: num(d.juros),
+  data_vencimento: str(d.data_vencimento),
+  status: (d.status as DividaStatus) || "Em Aberto",
+});
+const mapProposta = (p: Row): Proposta => ({
+  id_proposta: str(p.id),
+  id_divida: str(p.divida_id),
+  percentual_desconto: num(p.percentual_desconto),
+  valor_com_desconto: num(p.valor_com_desconto),
+  quantidade_parcelas: Number(p.quantidade_parcelas ?? 1),
+  valor_parcela: num(p.valor_parcela),
+  validade: str(p.validade),
+});
+const mapAcordo = (a: Row): Acordo => ({
+  id_acordo: str(a.id),
+  id_cliente: str(a.cliente_id),
+  id_divida: str(a.divida_id),
+  id_proposta: str(a.proposta_id),
+  data_acordo: str(a.data_acordo),
+  status: (a.status as AcordoStatus) || "Ativo",
+});
+const mapPagamento = (p: Row): Pagamento => ({
+  id_pagamento: str(p.id),
+  id_acordo: str(p.acordo_id),
+  tipo_pagamento: (p.tipo_pagamento as TipoPagamento) || "Pix",
+  valor: num(p.valor),
+  codigo_pagamento: str(p.codigo_pagamento),
+  data_pagamento: str(p.data_pagamento),
+  status: (p.status as PagamentoStatus) || "Pendente",
+});
 
 interface Ctx extends State {
-  // generic
-  setState: (updater: (s: State) => State) => void;
-  // clientes
-  addCliente: (c: Omit<Cliente, "id_cliente">) => void;
-  updateCliente: (id: string, patch: Partial<Cliente>) => void;
-  removeCliente: (id: string) => void;
-  // empresas
-  addEmpresa: (e: Omit<Empresa, "id_empresa">) => void;
-  updateEmpresa: (id: string, patch: Partial<Empresa>) => void;
-  removeEmpresa: (id: string) => void;
-  // dividas
-  addDivida: (d: Omit<Divida, "id_divida" | "numero"> & { numero?: string }) => void;
-  updateDivida: (id: string, patch: Partial<Divida>) => void;
-  removeDivida: (id: string) => void;
-  // propostas
-  addProposta: (p: Omit<Proposta, "id_proposta">) => Proposta;
-  updateProposta: (id: string, patch: Partial<Proposta>) => void;
-  removeProposta: (id: string) => void;
-  // acordos
-  createAcordo: (id_cliente: string, id_divida: string, id_proposta: string) => Acordo;
-  updateAcordoStatus: (id: string, status: AcordoStatus) => void;
-  // pagamentos
-  createPagamento: (id_acordo: string, tipo: TipoPagamento, valor: number) => Pagamento;
-  confirmarPagamento: (id_pagamento: string) => void;
-  updatePagamentoStatus: (id: string, status: PagamentoStatus) => void;
+  loading: boolean;
+  refresh: () => Promise<void>;
+
+  // clientes (profiles) — admin manages existing signups
+  addCliente: (c: Omit<Cliente, "id_cliente">) => Promise<void>;
+  updateCliente: (id: string, patch: Partial<Cliente>) => Promise<void>;
+  removeCliente: (id: string) => Promise<void>;
+
+  addEmpresa: (e: Omit<Empresa, "id_empresa">) => Promise<void>;
+  updateEmpresa: (id: string, patch: Partial<Empresa>) => Promise<void>;
+  removeEmpresa: (id: string) => Promise<void>;
+
+  addDivida: (d: Omit<Divida, "id_divida" | "numero"> & { numero?: string }) => Promise<void>;
+  updateDivida: (id: string, patch: Partial<Divida>) => Promise<void>;
+  removeDivida: (id: string) => Promise<void>;
+
+  addProposta: (p: Omit<Proposta, "id_proposta">) => Promise<Proposta | null>;
+  updateProposta: (id: string, patch: Partial<Proposta>) => Promise<void>;
+  removeProposta: (id: string) => Promise<void>;
+
+  createAcordo: (id_cliente: string, id_divida: string, id_proposta: string) => Promise<Acordo | null>;
+  updateAcordoStatus: (id: string, status: AcordoStatus) => Promise<void>;
+
+  createPagamento: (id_acordo: string, tipo: TipoPagamento, valor: number) => Promise<Pagamento | null>;
+  confirmarPagamento: (id_pagamento: string) => Promise<void>;
+  updatePagamentoStatus: (id: string, status: PagamentoStatus) => Promise<void>;
 }
 
 const C = createContext<Ctx | null>(null);
 
+const EMPTY: State = { clientes: [], empresas: [], dividas: [], propostas: [], acordos: [], pagamentos: [] };
+
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [state, setStateRaw] = useState<State>(() => {
-    if (typeof window === "undefined") return seed();
-    try {
-      const raw = localStorage.getItem(KEY);
-      if (raw) return JSON.parse(raw) as State;
-    } catch {}
-    const s = seed();
-    localStorage.setItem(KEY, JSON.stringify(s));
-    return s;
-  });
+  const { user } = useAuth();
+  const [state, setState] = useState<State>(EMPTY);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    localStorage.setItem(KEY, JSON.stringify(state));
-  }, [state]);
+  const refresh = async () => {
+    if (!user) { setState(EMPTY); return; }
+    setLoading(true);
+    const [profiles, empresas, dividas, propostas, acordos, pagamentos] = await Promise.all([
+      supabase.from("profiles").select("*"),
+      supabase.from("empresas").select("*").order("nome"),
+      supabase.from("dividas").select("*").order("created_at", { ascending: false }),
+      supabase.from("propostas").select("*").order("created_at", { ascending: false }),
+      supabase.from("acordos").select("*").order("created_at", { ascending: false }),
+      supabase.from("pagamentos").select("*").order("created_at", { ascending: false }),
+    ]);
+    setState({
+      clientes: (profiles.data || []).map(mapCliente),
+      empresas: (empresas.data || []).map(mapEmpresa),
+      dividas: (dividas.data || []).map(mapDivida),
+      propostas: (propostas.data || []).map(mapProposta),
+      acordos: (acordos.data || []).map(mapAcordo),
+      pagamentos: (pagamentos.data || []).map(mapPagamento),
+    });
+    setLoading(false);
+  };
 
-  const setState = (updater: (s: State) => State) => setStateRaw((s) => updater(s));
+  useEffect(() => { refresh(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [user?.id]);
 
-  const api: Ctx = useMemo(
-    () => ({
-      ...state,
-      setState,
-      addCliente: (c) => setState((s) => ({ ...s, clientes: [...s.clientes, { ...c, id_cliente: uid("cli") }] })),
-      updateCliente: (id, patch) =>
-        setState((s) => ({ ...s, clientes: s.clientes.map((x) => (x.id_cliente === id ? { ...x, ...patch } : x)) })),
-      removeCliente: (id) => setState((s) => ({ ...s, clientes: s.clientes.filter((x) => x.id_cliente !== id) })),
+  const api: Ctx = useMemo(() => ({
+    ...state,
+    loading,
+    refresh,
 
-      addEmpresa: (e) => setState((s) => ({ ...s, empresas: [...s.empresas, { ...e, id_empresa: uid("emp") }] })),
-      updateEmpresa: (id, patch) =>
-        setState((s) => ({ ...s, empresas: s.empresas.map((x) => (x.id_empresa === id ? { ...x, ...patch } : x)) })),
-      removeEmpresa: (id) => setState((s) => ({ ...s, empresas: s.empresas.filter((x) => x.id_empresa !== id) })),
+    addCliente: async () => {
+      // Clients self-sign-up via the login screen. Admin cannot create auth users from the UI.
+      throw new Error("Clientes são criados via cadastro próprio.");
+    },
+    updateCliente: async (id, patch) => {
+      await supabase.from("profiles").update({
+        nome: patch.nome, cpf: patch.cpf, telefone: patch.telefone, email: patch.email,
+      }).eq("id", id);
+      await refresh();
+    },
+    removeCliente: async (id) => {
+      await supabase.from("profiles").delete().eq("id", id);
+      await refresh();
+    },
 
-      addDivida: (d) =>
-        setState((s) => ({
-          ...s,
-          dividas: [...s.dividas, { ...d, id_divida: uid("div"), numero: d.numero || `DIV-${2000 + s.dividas.length + 1}` }],
-        })),
-      updateDivida: (id, patch) =>
-        setState((s) => ({ ...s, dividas: s.dividas.map((x) => (x.id_divida === id ? { ...x, ...patch } : x)) })),
-      removeDivida: (id) => setState((s) => ({ ...s, dividas: s.dividas.filter((x) => x.id_divida !== id) })),
+    addEmpresa: async (e) => {
+      await supabase.from("empresas").insert({ nome: e.nome, cnpj: e.cnpj, email: e.email });
+      await refresh();
+    },
+    updateEmpresa: async (id, patch) => {
+      const { id_empresa: _ignore, ...rest } = patch;
+      void _ignore;
+      await supabase.from("empresas").update(rest as never).eq("id", id);
+      await refresh();
+    },
+    removeEmpresa: async (id) => {
+      await supabase.from("empresas").delete().eq("id", id);
+      await refresh();
+    },
 
-      addProposta: (p) => {
-        const np: Proposta = { ...p, id_proposta: uid("prop") };
-        setState((s) => ({ ...s, propostas: [...s.propostas, np] }));
-        return np;
-      },
-      updateProposta: (id, patch) =>
-        setState((s) => ({ ...s, propostas: s.propostas.map((x) => (x.id_proposta === id ? { ...x, ...patch } : x)) })),
-      removeProposta: (id) => setState((s) => ({ ...s, propostas: s.propostas.filter((x) => x.id_proposta !== id) })),
+    addDivida: async (d) => {
+      const numero = d.numero || `DIV-${2000 + state.dividas.length + 1}`;
+      await supabase.from("dividas").insert({
+        numero,
+        cliente_id: d.id_cliente,
+        empresa_id: d.id_empresa,
+        valor_original: d.valor_original,
+        juros: d.juros,
+        data_vencimento: d.data_vencimento,
+        status: d.status,
+      });
+      await refresh();
+    },
+    updateDivida: async (id, patch) => {
+      const payload: Row = {};
+      if (patch.numero !== undefined) payload.numero = patch.numero;
+      if (patch.id_cliente !== undefined) payload.cliente_id = patch.id_cliente;
+      if (patch.id_empresa !== undefined) payload.empresa_id = patch.id_empresa;
+      if (patch.valor_original !== undefined) payload.valor_original = patch.valor_original;
+      if (patch.juros !== undefined) payload.juros = patch.juros;
+      if (patch.data_vencimento !== undefined) payload.data_vencimento = patch.data_vencimento;
+      if (patch.status !== undefined) payload.status = patch.status;
+      await supabase.from("dividas").update(payload as never).eq("id", id);
+      await refresh();
+    },
+    removeDivida: async (id) => {
+      await supabase.from("dividas").delete().eq("id", id);
+      await refresh();
+    },
 
-      createAcordo: (id_cliente, id_divida, id_proposta) => {
-        const a: Acordo = {
-          id_acordo: uid("acd"),
-          id_cliente,
-          id_divida,
-          id_proposta,
-          data_acordo: new Date().toISOString(),
-          status: "Ativo",
-        };
-        setState((s) => ({
-          ...s,
-          acordos: [...s.acordos, a],
-          dividas: s.dividas.map((d) => (d.id_divida === id_divida ? { ...d, status: "Em Negociação" } : d)),
-        }));
-        return a;
-      },
-      updateAcordoStatus: (id, status) =>
-        setState((s) => ({ ...s, acordos: s.acordos.map((x) => (x.id_acordo === id ? { ...x, status } : x)) })),
+    addProposta: async (p) => {
+      const { data } = await supabase.from("propostas").insert({
+        divida_id: p.id_divida,
+        percentual_desconto: p.percentual_desconto,
+        valor_com_desconto: p.valor_com_desconto,
+        quantidade_parcelas: p.quantidade_parcelas,
+        valor_parcela: p.valor_parcela,
+        validade: p.validade,
+      }).select().single();
+      await refresh();
+      return data ? mapProposta(data as Row) : null;
+    },
+    updateProposta: async (id, patch) => {
+      const payload: Row = {};
+      if (patch.id_divida !== undefined) payload.divida_id = patch.id_divida;
+      if (patch.percentual_desconto !== undefined) payload.percentual_desconto = patch.percentual_desconto;
+      if (patch.valor_com_desconto !== undefined) payload.valor_com_desconto = patch.valor_com_desconto;
+      if (patch.quantidade_parcelas !== undefined) payload.quantidade_parcelas = patch.quantidade_parcelas;
+      if (patch.valor_parcela !== undefined) payload.valor_parcela = patch.valor_parcela;
+      if (patch.validade !== undefined) payload.validade = patch.validade;
+      await supabase.from("propostas").update(payload as never).eq("id", id);
+      await refresh();
+    },
+    removeProposta: async (id) => {
+      await supabase.from("propostas").delete().eq("id", id);
+      await refresh();
+    },
 
-      createPagamento: (id_acordo, tipo, valor) => {
-        const code =
-          tipo === "Pix"
-            ? `00020126${Math.random().toString(36).slice(2, 10).toUpperCase()}5204000053039865802BR`
-            : `34191.79001 01043.510047 91020.150008 ${Math.floor(Math.random() * 9)} ${Math.floor(Math.random() * 90000000)}`;
-        const p: Pagamento = {
-          id_pagamento: uid("pag"),
-          id_acordo,
-          tipo_pagamento: tipo,
-          valor,
-          codigo_pagamento: code,
-          data_pagamento: new Date().toISOString(),
-          status: "Pendente",
-        };
-        setState((s) => ({ ...s, pagamentos: [...s.pagamentos, p] }));
-        return p;
-      },
-      confirmarPagamento: (id_pagamento) =>
-        setState((s) => {
-          const pag = s.pagamentos.find((x) => x.id_pagamento === id_pagamento);
-          if (!pag) return s;
-          const acordo = s.acordos.find((a) => a.id_acordo === pag.id_acordo);
-          return {
-            ...s,
-            pagamentos: s.pagamentos.map((x) => (x.id_pagamento === id_pagamento ? { ...x, status: "Pago" } : x)),
-            acordos: s.acordos.map((a) => (a.id_acordo === pag.id_acordo ? { ...a, status: "Pago" } : a)),
-            dividas: acordo
-              ? s.dividas.map((d) => (d.id_divida === acordo.id_divida ? { ...d, status: "Quitada" } : d))
-              : s.dividas,
-          };
-        }),
-      updatePagamentoStatus: (id, status) =>
-        setState((s) => ({ ...s, pagamentos: s.pagamentos.map((x) => (x.id_pagamento === id ? { ...x, status } : x)) })),
-    }),
-    [state],
-  );
+    createAcordo: async (id_cliente, id_divida, id_proposta) => {
+      const { data } = await supabase.from("acordos").insert({
+        cliente_id: id_cliente,
+        divida_id: id_divida,
+        proposta_id: id_proposta,
+        status: "Ativo",
+      }).select().single();
+      // mark divida as "Em Negociação" (admin-only; ignore if user lacks rights)
+      await supabase.from("dividas").update({ status: "Em Negociação" }).eq("id", id_divida);
+      await refresh();
+      return data ? mapAcordo(data as Row) : null;
+    },
+    updateAcordoStatus: async (id, status) => {
+      await supabase.from("acordos").update({ status }).eq("id", id);
+      await refresh();
+    },
+
+    createPagamento: async (id_acordo, tipo, valor) => {
+      const code = tipo === "Pix"
+        ? `00020126${Math.random().toString(36).slice(2, 10).toUpperCase()}5204000053039865802BR`
+        : `34191.79001 01043.510047 91020.150008 ${Math.floor(Math.random() * 9)} ${Math.floor(Math.random() * 90000000)}`;
+      const { data } = await supabase.from("pagamentos").insert({
+        acordo_id: id_acordo,
+        tipo_pagamento: tipo,
+        valor,
+        codigo_pagamento: code,
+        status: "Pendente",
+      }).select().single();
+      await refresh();
+      return data ? mapPagamento(data as Row) : null;
+    },
+    confirmarPagamento: async (id_pagamento) => {
+      const pag = state.pagamentos.find((x) => x.id_pagamento === id_pagamento);
+      await supabase.from("pagamentos").update({ status: "Pago" }).eq("id", id_pagamento);
+      if (pag) {
+        const ac = state.acordos.find((a) => a.id_acordo === pag.id_acordo);
+        await supabase.from("acordos").update({ status: "Pago" }).eq("id", pag.id_acordo);
+        if (ac) await supabase.from("dividas").update({ status: "Quitada" }).eq("id", ac.id_divida);
+      }
+      await refresh();
+    },
+    updatePagamentoStatus: async (id, status) => {
+      await supabase.from("pagamentos").update({ status }).eq("id", id);
+      await refresh();
+    },
+  }), [state, loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return <C.Provider value={api}>{children}</C.Provider>;
 }

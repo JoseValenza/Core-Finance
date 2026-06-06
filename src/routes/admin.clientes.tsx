@@ -10,7 +10,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/admin/clientes")({ component: Page });
 
 function Page() {
-  const { clientes, addCliente, updateCliente, removeCliente } = useData();
+  const { clientes, updateCliente, removeCliente } = useData();
   const [q, setQ] = useState("");
   const d = useCrudDialog<Cliente>();
   const [form, setForm] = useState({ nome: "", cpf: "", telefone: "", email: "" });
@@ -22,21 +22,23 @@ function Page() {
 
   const open = (c?: Cliente) => {
     setForm(c ? { nome: c.nome, cpf: c.cpf, telefone: c.telefone, email: c.email } : { nome: "", cpf: "", telefone: "", email: "" });
-    c ? d.openEdit(c) : d.openCreate();
+    if (c) d.openEdit(c);
   };
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.nome || !form.email) return toast.error("Preencha nome e e-mail.");
-    if (d.editing) { updateCliente(d.editing.id_cliente, form); toast.success("Cliente atualizado."); }
-    else { addCliente(form); toast.success("Cliente cadastrado."); }
+    if (!d.editing) return;
+    if (!form.nome) return toast.error("Informe o nome.");
+    await updateCliente(d.editing.id_cliente, form);
+    toast.success("Cliente atualizado.");
     d.close();
   };
 
   return (
     <div>
-      <PageHeader title="Gestão de Clientes" subtitle="Cadastre, edite e gerencie a base de clientes." />
-      <Toolbar q={q} setQ={setQ} onAdd={() => open()} addLabel="Novo cliente" />
+      <PageHeader title="Gestão de Clientes" subtitle="Clientes cadastrados via auto-cadastro na plataforma." />
+      <Toolbar q={q} setQ={setQ} />
+
       <DataTable
         columns={[
           { key: "nome", label: "Nome" },
@@ -49,7 +51,9 @@ function Page() {
           <RowActions
             onEdit={() => open(r as unknown as Cliente)}
             onDelete={() => {
-              if (confirm("Excluir este cliente?")) { removeCliente((r as unknown as Cliente).id_cliente); toast.success("Cliente excluído."); }
+              if (confirm("Excluir este cliente? Isso removerá apenas o perfil interno.")) {
+                removeCliente((r as unknown as Cliente).id_cliente).then(() => toast.success("Cliente excluído."));
+              }
             }}
           />
         )}

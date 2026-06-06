@@ -1,47 +1,55 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Eye, EyeOff, Shield, User, Loader2, Sparkles } from "lucide-react";
+import { Eye, EyeOff, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth, type Role } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({ component: LoginPage });
 
+type Mode = "login" | "signup";
+
 function LoginPage() {
   const nav = useNavigate();
-  const { user, login } = useAuth();
-  const [role, setRole] = useState<Role>("cliente");
+  const { user, login, signup, loading } = useAuth();
+  const [mode, setMode] = useState<Mode>("login");
+  const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
   const [show, setShow] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (user) nav({ to: user.role === "admin" ? "/admin/dashboard" : "/cliente/dashboard" });
   }, [user, nav]);
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !pwd.trim()) {
-      toast.error("Informe e-mail e senha.");
+    if (!email.trim() || !pwd.trim()) return toast.error("Informe e-mail e senha.");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return toast.error("E-mail inválido.");
+    if (pwd.length < 6) return toast.error("A senha deve ter pelo menos 6 caracteres.");
+    if (mode === "signup" && !nome.trim()) return toast.error("Informe seu nome.");
+
+    setBusy(true);
+    const res = mode === "login"
+      ? await login(email.trim(), pwd)
+      : await signup(email.trim(), pwd, nome.trim());
+    setBusy(false);
+
+    if (res.error) {
+      toast.error(res.error);
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      toast.error("E-mail inválido.");
-      return;
+    if (mode === "signup") {
+      toast.success("Cadastro realizado. Verifique seu e-mail para confirmar a conta.");
+      setMode("login");
     }
-    setLoading(true);
-    setTimeout(() => {
-      login(email.trim(), pwd, role);
-      nav({ to: role === "admin" ? "/admin/dashboard" : "/cliente/dashboard" });
-    }, 500);
   };
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
-      {/* Brand panel */}
       <div className="hidden lg:flex flex-col justify-between p-12 relative overflow-hidden bg-sidebar">
         <div className="flex items-center gap-3">
           <LogoMark />
@@ -78,7 +86,6 @@ function LoginPage() {
         <div aria-hidden className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-chart-4/20 blur-3xl" />
       </div>
 
-      {/* Form panel */}
       <div className="flex items-center justify-center p-6 sm:p-12">
         <div className="w-full max-w-md">
           <div className="lg:hidden flex items-center gap-3 mb-8">
@@ -86,52 +93,55 @@ function LoginPage() {
             <span className="text-xl font-semibold tracking-tight">Core Finance</span>
           </div>
 
-          <h2 className="text-2xl font-semibold tracking-tight">Acesse sua conta</h2>
+          <h2 className="text-2xl font-semibold tracking-tight">
+            {mode === "login" ? "Acesse sua conta" : "Crie sua conta"}
+          </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Selecione seu perfil e informe suas credenciais.
+            {mode === "login"
+              ? "Informe suas credenciais para entrar na plataforma."
+              : "Cadastre-se para começar a gerenciar suas renegociações."}
           </p>
 
-          {/* Role selector */}
           <div className="mt-6 grid grid-cols-2 gap-2 p-1 rounded-xl bg-muted/40 border">
-            {([
-              { id: "cliente", label: "Cliente", icon: User },
-              { id: "admin", label: "Administrador", icon: Shield },
-            ] as const).map((opt) => {
-              const active = role === opt.id;
-              const Icon = opt.icon;
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => setRole(opt.id)}
-                  className={`flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition ${
-                    active ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {opt.label}
-                </button>
-              );
-            })}
+            {(["login", "signup"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setMode(m)}
+                className={`rounded-lg py-2.5 text-sm font-medium transition ${
+                  mode === m ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {m === "login" ? "Entrar" : "Cadastrar"}
+              </button>
+            ))}
           </div>
 
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
+            {mode === "signup" && (
+              <div className="space-y-2">
+                <Label htmlFor="nome">Nome completo</Label>
+                <Input id="nome" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Seu nome" className="h-11" />
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>
               <Input
                 id="email" type="email" autoComplete="email" value={email}
-                onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com"
-                className="h-11"
+                onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" className="h-11"
               />
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="pwd">Senha</Label>
-                <a href="/esqueci-senha" className="text-xs text-primary hover:underline">Esqueci minha senha</a>
+                {mode === "login" && (
+                  <a href="/esqueci-senha" className="text-xs text-primary hover:underline">Esqueci minha senha</a>
+                )}
               </div>
               <div className="relative">
                 <Input
-                  id="pwd" type={show ? "text" : "password"} autoComplete="current-password"
+                  id="pwd" type={show ? "text" : "password"}
+                  autoComplete={mode === "login" ? "current-password" : "new-password"}
                   value={pwd} onChange={(e) => setPwd(e.target.value)} placeholder="••••••••" className="h-11 pr-10"
                 />
                 <button
@@ -144,8 +154,8 @@ function LoginPage() {
               </div>
             </div>
 
-            <Button type="submit" disabled={loading} className="w-full h-11 text-base">
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
+            <Button type="submit" disabled={busy || loading} className="w-full h-11 text-base">
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : mode === "login" ? "Entrar" : "Criar conta"}
             </Button>
           </form>
 

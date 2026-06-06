@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as EsqueciSenhaRouteImport } from './routes/esqueci-senha'
 import { Route as ClienteRouteImport } from './routes/cliente'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -26,6 +27,11 @@ import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 import { Route as AdminClientesRouteImport } from './routes/admin.clientes'
 import { Route as AdminAcordosRouteImport } from './routes/admin.acordos'
 
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EsqueciSenhaRoute = EsqueciSenhaRouteImport.update({
   id: '/esqueci-senha',
   path: '/esqueci-senha',
@@ -112,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/cliente': typeof ClienteRouteWithChildren
   '/esqueci-senha': typeof EsqueciSenhaRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/admin/acordos': typeof AdminAcordosRoute
   '/admin/clientes': typeof AdminClientesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -130,6 +137,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRouteWithChildren
   '/cliente': typeof ClienteRouteWithChildren
   '/esqueci-senha': typeof EsqueciSenhaRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/admin/acordos': typeof AdminAcordosRoute
   '/admin/clientes': typeof AdminClientesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -149,6 +157,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/cliente': typeof ClienteRouteWithChildren
   '/esqueci-senha': typeof EsqueciSenhaRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/admin/acordos': typeof AdminAcordosRoute
   '/admin/clientes': typeof AdminClientesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -169,6 +178,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cliente'
     | '/esqueci-senha'
+    | '/reset-password'
     | '/admin/acordos'
     | '/admin/clientes'
     | '/admin/dashboard'
@@ -187,6 +197,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cliente'
     | '/esqueci-senha'
+    | '/reset-password'
     | '/admin/acordos'
     | '/admin/clientes'
     | '/admin/dashboard'
@@ -205,6 +216,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cliente'
     | '/esqueci-senha'
+    | '/reset-password'
     | '/admin/acordos'
     | '/admin/clientes'
     | '/admin/dashboard'
@@ -224,10 +236,18 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   ClienteRoute: typeof ClienteRouteWithChildren
   EsqueciSenhaRoute: typeof EsqueciSenhaRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/esqueci-senha': {
       id: '/esqueci-senha'
       path: '/esqueci-senha'
@@ -389,6 +409,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   ClienteRoute: ClienteRouteWithChildren,
   EsqueciSenhaRoute: EsqueciSenhaRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
